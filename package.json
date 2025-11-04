@@ -1,0 +1,21 @@
+{
+  "name": "node-js-course",
+  "version": "1.0.0",
+  "description": "NodeJS course on Udemy",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "node --watch server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-personal:marustas/Node-JS-Course.git"
+  },
+  "author": "Stanislau Marudau",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongodb": "^6.20.0",
+    "mongoose": "^8.19.3"
+  }
+}
