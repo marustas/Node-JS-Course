@@ -2,10 +2,11 @@
   "name": "node-js-course",
   "version": "1.0.0",
   "description": "NodeJS course on Udemy",
-  "main": "server.js",
+  "main": "server.ts",
+  "type": "module",
   "scripts": {
     "test": "test",
-    "start": "node --watch --env-file=.env server.js"
+    "start": "node --experimental-strip-types --watch --env-file=.env server.ts"
   },
   "repository": {
     "type": "git",
@@ -16,6 +17,10 @@
   "dependencies": {
     "express": "^5.1.0",
     "mongodb": "^6.20.0",
-    "mongoose": "^8.19.3"
+    "mongoose": "^8.19.3",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5"
   }
 }
