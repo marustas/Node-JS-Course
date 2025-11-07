@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import app from "./app.ts";
+import { env } from "./envSchema.ts";
 
-const PORT = process.env.PORT;
-const DB_CONNECTION_STRING = process.env.DB_CONNECTION !== undefined ? process.env.DB_CONNECTION.replace('<DB_PASSWORD>', process.env.DB_PASSWORD ?? '') : '';
+const PORT = env.PORT;
+const DB_CONNECTION_STRING = env.DB_CONNECTION.replace('<DB_PASSWORD>', env.DB_PASSWORD ?? '');
 
 mongoose.connect(DB_CONNECTION_STRING, {
 }).then(() => console.log('Database connected'))
