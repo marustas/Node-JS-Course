@@ -3,7 +3,7 @@ import TourModel from '../models/tourModel.ts';
 import type { Tour } from '../models/tourModel.ts';
 import type { Request, RequestHandler } from 'express';
 
-interface GetTourParams {
+interface TourParams {
   id: string;
 }
 
@@ -16,10 +16,7 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, null> = a
   });
 };
 
-const getTour: RequestHandler<GetTourParams, ResponsePayload<Tour>, null, null> = async (
-  req,
-  res
-) => {
+const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = async (req, res) => {
   const { id } = req.params;
 
   const tour = await TourModel.findById(id);
@@ -59,9 +56,52 @@ const createTour: RequestHandler<
   }
 };
 
-const updateTour = async () => {};
+const updateTour: RequestHandler<
+  TourParams,
+  ResponsePayload<Tour>,
+  Request<null, Tour, Tour, null>,
+  null
+> = async (req, res) => {
+  const { id } = req.params;
 
-const deleteTour = async () => {};
+  const updatedTour = await TourModel.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedTour) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Tour not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: updatedTour,
+  });
+};
+
+const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> = async (
+  req,
+  res
+) => {
+  const { id } = req.params;
+
+  const deletedTour = await TourModel.findByIdAndDelete(id);
+
+  if (!deletedTour) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Tour not found',
+    });
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+};
 
 const tourController = {
   getAllTours,
