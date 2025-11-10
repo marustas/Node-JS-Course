@@ -3,9 +3,39 @@ import TourModel from '../models/tourModel.ts';
 import type { Tour } from '../models/tourModel.ts';
 import type { Request, RequestHandler } from 'express';
 
-const getAllTours = async () => {};
+interface GetTourParams {
+  id: string;
+}
 
-const getTour = async () => {};
+const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, null> = async (req, res) => {
+  const allTours = await TourModel.find();
+
+  res.status(200).json({
+    status: 'success',
+    data: allTours,
+  });
+};
+
+const getTour: RequestHandler<GetTourParams, ResponsePayload<Tour>, null, null> = async (
+  req,
+  res
+) => {
+  const { id } = req.params;
+
+  const tour = await TourModel.findById(id);
+
+  if (!tour) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Tour not found',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: tour,
+  });
+};
 
 const createTour: RequestHandler<
   null,
