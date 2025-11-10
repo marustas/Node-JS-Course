@@ -1,16 +1,18 @@
 import type { ResponsePayload } from '../models/ApiResponse.ts';
 import TourModel from '../models/tourModel.ts';
 import type { Tour } from '../models/tourModel.ts';
-import type { Request, Response } from 'express';
+import type { Request, RequestHandler } from 'express';
 
-export const getAllTours = async () => {};
+const getAllTours = async () => {};
 
-export const getTour = async () => {};
+const getTour = async () => {};
 
-export const createTour = async (
-  req: Request<null, Tour, Tour, null>,
-  res: Response<ResponsePayload<Tour>>
-) => {
+const createTour: RequestHandler<
+  null,
+  ResponsePayload<Tour>,
+  Request<null, Tour, Tour, null>,
+  null
+> = async (req, res) => {
   try {
     const newTour = await TourModel.create(req.body);
 
@@ -27,6 +29,16 @@ export const createTour = async (
   }
 };
 
-export const updateTour = async () => {};
+const updateTour = async () => {};
 
-export const deleteTour = async () => {};
+const deleteTour = async () => {};
+
+const tourController = {
+  getAllTours,
+  getTour,
+  createTour,
+  updateTour,
+  deleteTour,
+};
+
+export default tourController;
