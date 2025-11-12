@@ -4,6 +4,8 @@ import type { Tour } from '../models/tourModel.ts';
 import type { Request, RequestHandler } from 'express';
 import { parseOperators } from '../utils/parseQueryOperator.ts';
 
+type Direction = 'asc' | 'desc';
+
 interface TourParams {
   id: string;
 }
@@ -13,10 +15,9 @@ type TourFilters = Required<
 >;
 
 interface TourQuery extends TourFilters {
-  page?: string;
+  // page?: string;
   limit?: string;
-  sort?: string;
-  order?: 'asc' | 'desc';
+  sortBy: `${keyof TourFilters}:${Direction}`;
 }
 
 const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery> = async (
@@ -24,13 +25,28 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery
   res
 ) => {
   const { query } = req;
-  const { page, limit, sort, order, ...filters } = query;
+  const { limit, sortBy, ...filters } = query;
 
   const filterQuery = parseOperators<TourFilters>(filters);
-  console.log(page, limit, sort, order);
   console.log('Filter Query:', filterQuery);
 
-  const filteredTours = await TourModel.find();
+  let tourQuery = TourModel.find(filterQuery);
+
+  if (limit) {
+    const limitNumber = parseInt(limit, 10);
+    tourQuery = tourQuery.limit(limitNumber);
+  }
+
+  if (sortBy) {
+    const [sortField, direction] = sortBy.split(':');
+    const sortDirection = direction === 'desc' ? -1 : 1;
+
+    if (sortField) {
+      tourQuery = tourQuery.sort({ [sortField]: sortDirection, _id: 1 });
+    }
+  }
+
+  const filteredTours = await tourQuery;
 
   res.status(200).json({
     status: 'success',
