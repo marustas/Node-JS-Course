@@ -1,12 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
 
-interface TourSchema {
-  name: string;
-  rating: number;
-  price: number;
-}
+import type { InferSchemaType } from 'mongoose';
 
-const tourSchema = new Schema<TourSchema>({
+const tourSchema = new Schema({
   name: {
     type: String,
     required: [true, 'A tour must have a name'],
@@ -23,6 +19,8 @@ const tourSchema = new Schema<TourSchema>({
   },
 });
 
-const tourModel = mongoose.model('Tour', tourSchema);
+export type Tour = InferSchemaType<typeof tourSchema>;
 
-export default tourModel;
+const TourModel = mongoose.model<Tour>('Tour', tourSchema);
+
+export default TourModel;
