@@ -18,7 +18,6 @@
     "sourceMap": true,
     "verbatimModuleSyntax": true,
 
-
     /* If NOT transpiling with tsc: */
     "module": "nodenext",
     "noEmit": true,
