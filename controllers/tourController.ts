@@ -2,17 +2,39 @@ import type { ResponsePayload } from '../models/ApiResponse.ts';
 import TourModel from '../models/tourModel.ts';
 import type { Tour } from '../models/tourModel.ts';
 import type { Request, RequestHandler } from 'express';
+import { parseOperators } from '../utils/parseQueryOperator.ts';
 
 interface TourParams {
   id: string;
 }
 
-const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, null> = async (req, res) => {
-  const allTours = await TourModel.find();
+type TourFilters = Required<
+  Omit<Tour, 'summary' | 'description' | 'imageCover' | 'images' | 'startDates' | 'createdAt'>
+>;
+
+interface TourQuery extends TourFilters {
+  page?: string;
+  limit?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery> = async (
+  req,
+  res
+) => {
+  const { query } = req;
+  const { page, limit, sort, order, ...filters } = query;
+
+  const filterQuery = parseOperators<TourFilters>(filters);
+  console.log(page, limit, sort, order);
+  console.log('Filter Query:', filterQuery);
+
+  const filteredTours = await TourModel.find();
 
   res.status(200).json({
     status: 'success',
-    data: allTours,
+    data: filteredTours,
   });
 };
 
