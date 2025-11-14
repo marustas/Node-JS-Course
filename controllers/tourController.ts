@@ -15,7 +15,7 @@ type TourFilters = Required<
 >;
 
 interface TourQuery extends TourFilters {
-  // page?: string;
+  page?: string;
   limit?: string;
   sortBy: `${keyof TourFilters}:${Direction}`;
 }
@@ -25,7 +25,7 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery
   res
 ) => {
   const { query } = req;
-  const { limit, sortBy, ...filters } = query;
+  const { limit, page, sortBy, ...filters } = query;
 
   const filterQuery = parseOperators<TourFilters>(filters);
   console.log('Filter Query:', filterQuery);
@@ -35,6 +35,21 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery
   if (limit) {
     const limitNumber = parseInt(limit, 10);
     tourQuery = tourQuery.limit(limitNumber);
+  }
+
+  if (page) {
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+    const queriedDocuments = await TourModel.countDocuments();
+
+    if (skip >= queriedDocuments) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Page number exceeds total number of documents',
+      });
+    }
+    tourQuery = tourQuery.skip(skip);
   }
 
   if (sortBy) {
