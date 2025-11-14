@@ -15,8 +15,8 @@ type TourFilters = Required<
 >;
 
 interface TourQuery extends TourFilters {
-  page?: string;
-  limit?: string;
+  page?: number;
+  limit?: number;
   sortBy: `${keyof TourFilters}:${Direction}`;
 }
 
@@ -33,14 +33,11 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery
   let tourQuery = TourModel.find(filterQuery);
 
   if (limit) {
-    const limitNumber = parseInt(limit, 10);
-    tourQuery = tourQuery.limit(limitNumber);
+    tourQuery = tourQuery.limit(limit);
   }
 
   if (page) {
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = limit ? parseInt(limit, 10) : 10;
-    const skip = (pageNumber - 1) * limitNumber;
+    const skip = (page - 1) * (limit || 10);
     const queriedDocuments = await TourModel.countDocuments();
 
     if (skip >= queriedDocuments) {
@@ -156,7 +153,18 @@ const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> 
   });
 };
 
+const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery> = (
+  req,
+  res,
+  next
+) => {
+  req.query.limit = 5;
+  req.query.sortBy = 'price:asc';
+  next();
+};
+
 const tourController = {
+  aliasTopTours,
   getAllTours,
   getTour,
   createTour,
