@@ -1,6 +1,9 @@
 import { Router } from 'express';
-import tourController from '../controllers/tourController.ts';
+import tourController from '../controllers/tours/tourController.ts';
+
 const tourRouter = Router();
+
+tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
 
 tourRouter
   .get('/', tourController.getAllTours)

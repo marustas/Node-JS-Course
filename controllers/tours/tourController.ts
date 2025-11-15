@@ -1,18 +1,25 @@
-import type { ResponsePayload } from '../models/ApiResponse.ts';
-import TourModel from '../models/tourModel.ts';
-import type { Tour } from '../models/tourModel.ts';
-import type { Request, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
+import type { Tour } from '../../models/tourModel.ts';
+import type { ResponsePayload } from '../../models/ApiResponse.ts';
+
+import TourModel from '../../models/tourModel.ts';
+import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 
 interface TourParams {
   id: string;
 }
 
-const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, null> = async (req, res) => {
-  const allTours = await TourModel.find();
+const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
+  req,
+  res
+) => {
+  const tourQuery = new TourQuery(TourModel.find(), req.query).filter().sort().paginate();
+
+  const filteredTours = await tourQuery.getQuery();
 
   res.status(200).json({
     status: 'success',
-    data: allTours,
+    data: filteredTours,
   });
 };
 
@@ -34,12 +41,7 @@ const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = a
   });
 };
 
-const createTour: RequestHandler<
-  null,
-  ResponsePayload<Tour>,
-  Request<null, Tour, Tour, null>,
-  null
-> = async (req, res) => {
+const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = async (req, res) => {
   try {
     const newTour = await TourModel.create(req.body);
 
@@ -56,12 +58,10 @@ const createTour: RequestHandler<
   }
 };
 
-const updateTour: RequestHandler<
-  TourParams,
-  ResponsePayload<Tour>,
-  Request<null, Tour, Tour, null>,
-  null
-> = async (req, res) => {
+const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> = async (
+  req,
+  res
+) => {
   const { id } = req.params;
 
   const updatedTour = await TourModel.findByIdAndUpdate(id, req.body, {
@@ -103,7 +103,18 @@ const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> 
   });
 };
 
+const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = (
+  req,
+  res,
+  next
+) => {
+  req.query.limit = 5;
+  req.query.sortBy = 'price:asc';
+  next();
+};
+
 const tourController = {
+  aliasTopTours,
   getAllTours,
   getTour,
   createTour,
