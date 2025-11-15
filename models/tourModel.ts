@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+
 import type { InferSchemaType } from 'mongoose';
 
 const tourSchema = new Schema({
@@ -8,7 +9,23 @@ const tourSchema = new Schema({
     unique: true,
     trim: true,
   },
-  rating: {
+  duration: {
+    type: Number,
+    required: [true, 'A tour must have a duration'],
+  },
+  maxGroupSize: {
+    type: Number,
+    required: [true, 'A tour must have a group size'],
+  },
+  difficulty: {
+    type: String,
+    required: [true, 'A tour must have a difficulty'],
+  },
+  ratingAverage: {
+    type: Number,
+    default: 0,
+  },
+  ratingQuantity: {
     type: Number,
     default: 0,
   },
@@ -16,6 +33,28 @@ const tourSchema = new Schema({
     type: Number,
     required: [true, 'A tour must have a price'],
   },
+  priceDiscount: {
+    type: Number,
+  },
+  summary: {
+    type: String,
+    trim: true,
+    required: [true, 'A tour must have a summary'],
+  },
+  description: {
+    type: String,
+    trim: true,
+  },
+  imageCover: {
+    type: String,
+    required: [true, 'A tour must have an image cover'],
+  },
+  images: [String],
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  startDates: [Date],
 });
 
 export type Tour = InferSchemaType<typeof tourSchema>;
