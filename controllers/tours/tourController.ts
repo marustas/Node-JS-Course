@@ -17,6 +17,13 @@ interface AggregatorData {
   maxPrice: number;
 }
 
+interface MonthlyPlan {
+  month: number;
+  monthLabel: string;
+  numTours: number;
+  tours: string[];
+}
+
 const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
   req,
   res
@@ -142,6 +149,11 @@ export const getTourStats: RequestHandler<
         maxPrice: { $max: '$price' },
       },
     } satisfies PipelineStage.Group,
+    {
+      $sort: {
+        avgPrice: 1,
+      },
+    } satisfies PipelineStage.Sort,
   ]);
 
   res.status(200).json({
@@ -150,8 +162,68 @@ export const getTourStats: RequestHandler<
   });
 };
 
+export const getMonthlyPlan: RequestHandler<
+  { year: number },
+  ResponsePayload<MonthlyPlan[]>,
+  null,
+  null
+> = async (req, res) => {
+  try {
+    const year = req.params.year;
+    const planForTheYear = await TourModel.aggregate<MonthlyPlan>([
+      {
+        $unwind: '$startDates',
+      } satisfies PipelineStage.Unwind,
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      } satisfies PipelineStage.Match,
+      {
+        $group: {
+          _id: {
+            $month: '$startDates',
+          },
+          numTours: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      } satisfies PipelineStage.Group,
+      {
+        $project: {
+          _id: 0,
+          month: '$_id',
+          monthLabel: {
+            $dateToString: {
+              format: '%B',
+              date: '$startDates',
+            },
+          },
+        },
+      } satisfies PipelineStage.Project,
+      {
+        $sort: { numTours: 1 },
+      } satisfies PipelineStage.Sort,
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: planForTheYear,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: 'Failed to get monthly plan',
+      error: error,
+    });
+  }
+};
+
 const tourController = {
   aliasTopTours,
+  getMonthlyPlan,
   getTourStats,
   getAllTours,
   getTour,
