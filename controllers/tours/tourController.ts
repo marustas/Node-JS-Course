@@ -4,9 +4,17 @@ import type { ResponsePayload } from '../../models/ApiResponse.ts';
 
 import TourModel from '../../models/tourModel.ts';
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
+import type { FilterQuery, PipelineStage } from 'mongoose';
 
 interface TourParams {
   id: string;
+}
+
+interface AggregatorData {
+  avgRating: number;
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
 }
 
 const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
@@ -105,7 +113,7 @@ const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> 
 
 const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = (
   req,
-  res,
+  _,
   next
 ) => {
   req.query.limit = 5;
@@ -113,8 +121,38 @@ const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQue
   next();
 };
 
+export const getTourStats: RequestHandler<
+  null,
+  ResponsePayload<AggregatorData[]>,
+  null,
+  null
+> = async (_, res) => {
+  const stats = await TourModel.aggregate<AggregatorData>([
+    {
+      $match: { ratingsAverage: { $gte: 4.5 } } satisfies FilterQuery<Tour>,
+    } satisfies PipelineStage.Match,
+    {
+      $group: {
+        _id: '$difficulty',
+        numTours: { $sum: 1 },
+        numRatings: { $sum: '$ratingQuantity' },
+        avgRating: { $avg: '$ratingAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    } satisfies PipelineStage.Group,
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: stats,
+  });
+};
+
 const tourController = {
   aliasTopTours,
+  getTourStats,
   getAllTours,
   getTour,
   createTour,

@@ -5,6 +5,8 @@ const tourRouter = Router();
 
 tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
 
+tourRouter.route('/tour-stats').get(tourController.getTourStats);
+
 tourRouter
   .get('/', tourController.getAllTours)
   .get('/:id', tourController.getTour)
