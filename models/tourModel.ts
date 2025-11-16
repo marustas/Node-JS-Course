@@ -55,6 +55,14 @@ const tourSchema = new Schema({
     default: Date.now(),
   },
   startDates: [Date],
+  secretTour: Boolean,
+});
+
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({
+    $match: { secretTour: { $ne: true } },
+  });
+  next();
 });
 
 export type Tour = InferSchemaType<typeof tourSchema>;
