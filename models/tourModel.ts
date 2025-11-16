@@ -40,6 +40,13 @@ const tourSchema = new Schema({
   },
   priceDiscount: {
     type: Number,
+    validate: {
+      // only works for new document creation, because "this" points to current document in creation
+      validator: function (value: number) {
+        return value < this.price;
+      },
+      message: 'Discount price ({VALUE}) should be below regular price',
+    },
   },
   summary: {
     type: String,
