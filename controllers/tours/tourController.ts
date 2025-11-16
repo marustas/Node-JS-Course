@@ -4,9 +4,24 @@ import type { ResponsePayload } from '../../models/ApiResponse.ts';
 
 import TourModel from '../../models/tourModel.ts';
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
+import type { FilterQuery, PipelineStage } from 'mongoose';
 
 interface TourParams {
   id: string;
+}
+
+interface AggregatorData {
+  avgRating: number;
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
+}
+
+interface MonthlyPlan {
+  month: number;
+  monthLabel: string;
+  numTours: number;
+  tours: string[];
 }
 
 const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
@@ -105,7 +120,7 @@ const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> 
 
 const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = (
   req,
-  res,
+  _,
   next
 ) => {
   req.query.limit = 5;
@@ -113,8 +128,103 @@ const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQue
   next();
 };
 
+export const getTourStats: RequestHandler<
+  null,
+  ResponsePayload<AggregatorData[]>,
+  null,
+  null
+> = async (_, res) => {
+  const stats = await TourModel.aggregate<AggregatorData>([
+    {
+      $match: { ratingsAverage: { $gte: 4.5 } } satisfies FilterQuery<Tour>,
+    } satisfies PipelineStage.Match,
+    {
+      $group: {
+        _id: '$difficulty',
+        numTours: { $sum: 1 },
+        numRatings: { $sum: '$ratingQuantity' },
+        avgRating: { $avg: '$ratingAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    } satisfies PipelineStage.Group,
+    {
+      $sort: {
+        avgPrice: 1,
+      },
+    } satisfies PipelineStage.Sort,
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: stats,
+  });
+};
+
+export const getMonthlyPlan: RequestHandler<
+  { year: number },
+  ResponsePayload<MonthlyPlan[]>,
+  null,
+  null
+> = async (req, res) => {
+  try {
+    const year = req.params.year;
+    const planForTheYear = await TourModel.aggregate<MonthlyPlan>([
+      {
+        $unwind: '$startDates',
+      } satisfies PipelineStage.Unwind,
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      } satisfies PipelineStage.Match,
+      {
+        $group: {
+          _id: {
+            $month: '$startDates',
+          },
+          numTours: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      } satisfies PipelineStage.Group,
+      {
+        $project: {
+          _id: 0,
+          month: '$_id',
+          monthLabel: {
+            $dateToString: {
+              format: '%B',
+              date: '$startDates',
+            },
+          },
+        },
+      } satisfies PipelineStage.Project,
+      {
+        $sort: { numTours: 1 },
+      } satisfies PipelineStage.Sort,
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: planForTheYear,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: 'Failed to get monthly plan',
+      error: error,
+    });
+  }
+};
+
 const tourController = {
   aliasTopTours,
+  getMonthlyPlan,
+  getTourStats,
   getAllTours,
   getTour,
   createTour,
