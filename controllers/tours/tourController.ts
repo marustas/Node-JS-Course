@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import type { Tour } from '../../models/tourModel.ts';
-import type { ResponsePayload } from '../../models/ApiResponse.ts';
+import type { ResponsePayload } from '../../models/ApiModels.ts';
 
 import TourModel from '../../models/tourModel.ts';
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
