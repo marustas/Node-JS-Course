@@ -7,6 +7,7 @@ export interface ResponsePayload<T> {
 
 export class AppError extends Error {
   statusCode: number;
+  isOperational = true;
 
   constructor(message: string, statusCode = 500) {
     super(message);
