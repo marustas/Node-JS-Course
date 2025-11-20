@@ -10,8 +10,7 @@ app.use('/api/tours', tourRouter);
 const errorHandler: ErrorRequestHandler<null, ResponsePayload<null>, null> = (
   err: AppError,
   req,
-  res,
-  next
+  res
 ) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
