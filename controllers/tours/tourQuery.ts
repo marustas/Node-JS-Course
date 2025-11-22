@@ -3,7 +3,17 @@ import type { Tour } from '../../models/tourModel.ts';
 import { parseOperators } from '../../utils/parseQueryOperator.ts';
 
 type TourFilters = Required<
-  Omit<Tour, 'summary' | 'description' | 'imageCover' | 'images' | 'startDates' | 'createdAt'>
+  Omit<
+    Tour,
+    | 'summary'
+    | 'description'
+    | 'imageCover'
+    | 'images'
+    | 'startDates'
+    | 'createdAt'
+    | 'locations'
+    | 'startLocation'
+  >
 >;
 
 type Direction = 'asc' | 'desc';
