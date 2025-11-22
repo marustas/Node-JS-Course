@@ -1,10 +1,11 @@
 import type { RequestHandler } from 'express';
 import type { Tour } from '../../models/tourModel.ts';
-import type { ResponsePayload } from '../../models/ApiResponse.ts';
+import type { ResponsePayload } from '../../models/ApiModels.ts';
 
 import TourModel from '../../models/tourModel.ts';
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
+import { catchAsync } from '../../app.ts';
 
 interface TourParams {
   id: string;
@@ -225,11 +226,11 @@ const tourController = {
   aliasTopTours,
   getMonthlyPlan,
   getTourStats,
-  getAllTours,
-  getTour,
-  createTour,
-  updateTour,
-  deleteTour,
+  getAllTours: catchAsync(getAllTours),
+  getTour: catchAsync(getTour),
+  createTour: catchAsync(createTour),
+  updateTour: catchAsync(updateTour),
+  deleteTour: catchAsync(deleteTour),
 };
 
 export default tourController;
