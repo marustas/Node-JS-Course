@@ -1,6 +1,18 @@
-import { model, Schema, type InferSchemaType } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 
-const userSchema = new Schema({
+export interface User {
+  email: string;
+  password: string;
+  name: string;
+  photo?: string;
+}
+
+export interface UserDocument extends User, Document {
+  confirmPassword?: string; // virtual field
+  _confirmPassword?: string; // internal storage
+}
+
+const userSchema = new Schema<UserDocument>({
   email: {
     type: String,
     required: [true, 'A user must have an email'],
@@ -20,13 +32,24 @@ const userSchema = new Schema({
     trim: true,
   },
   photo: String,
-  confirmPassword: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-  },
 });
 
-export type User = InferSchemaType<typeof userSchema>;
+userSchema
+  .virtual('confirmPassword')
+  .set(function (this: UserDocument, value: string) {
+    this._confirmPassword = value;
+  })
+  .get(function (this: UserDocument) {
+    return this._confirmPassword;
+  });
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  next();
+});
 
 const UserModel = model<User>('User', userSchema);
 
