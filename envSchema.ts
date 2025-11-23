@@ -5,6 +5,8 @@ const envSchema = z.object({
   DB_CONNECTION: z.string().min(1),
   DB_PASSWORD: z.string().min(1),
   ENVIRONMENT: z.enum(['development', 'production', 'test']).default('development'),
+  JWT_SECRET: z.string(),
+  JWT_EXPIRES_IN: z.string(),
 });
 
 export const env = envSchema.parse(process.env);
