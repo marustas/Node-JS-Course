@@ -4,7 +4,7 @@ import type { User } from '../../models/userModel.ts';
 
 import UserModel from '../../models/userModel.ts';
 import { catchAsync } from '../../utils/catchAsync.ts';
-import jwt from 'jsonwebtoken';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { env } from '../../envSchema.ts';
 import { type StringValue } from 'ms';
 
@@ -51,7 +51,33 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
   });
 };
 
+const protect: RequestHandler<null> = async (req, res, next) => {
+  const { headers } = req;
+
+  const token = headers.authorization?.split(' ')[1];
+  if (!token) {
+    return next(new AppError('You are not logged in! Please log in to get access.', 401));
+  }
+
+  const decodedTokenPayload = await new Promise<JwtPayload>((resolve, reject) => {
+    jwt.verify(token, env.JWT_SECRET, (err, decoded) => {
+      if (err || !decoded || typeof decoded === 'string') {
+        return reject(new AppError('Invalid token', 401));
+      }
+      resolve(decoded);
+    });
+  });
+
+  const currentUser = await UserModel.findById(decodedTokenPayload.id);
+  if (!currentUser) {
+    return next(new AppError('The user belonging to this token does no longer exist.', 401));
+  }
+
+  next();
+};
+
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
+  protect,
 };
