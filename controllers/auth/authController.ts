@@ -7,6 +7,7 @@ import { catchAsync } from '../../utils/catchAsync.ts';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { env } from '../../envSchema.ts';
 import { type StringValue } from 'ms';
+import { sendEmail } from '../../utils/email.ts';
 
 interface AuthResponsePayload extends ResponsePayload<User> {
   token: string;
@@ -51,7 +52,11 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
   });
 };
 
-const forgotPassword: RequestHandler<null, null, User> = async (req, res, next) => {
+const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>, User> = async (
+  req,
+  res,
+  next
+) => {
   const user = await UserModel.findOne({ email: req.body.email });
 
   if (!user) {
@@ -60,7 +65,28 @@ const forgotPassword: RequestHandler<null, null, User> = async (req, res, next) 
 
   const resetToken = user.createPasswordResetToken();
 
-  await user.save({ validateBeforeSave: false }); // needed because the password field is required, but not being updated here
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset Token',
+      text: `Follow this url to reset password: ${resetUrl}`,
+    });
+  } catch {
+    user.resetPasswordResetToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new AppError('Error sending email', 500));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Token sent to email!',
+  });
 
   next();
 };

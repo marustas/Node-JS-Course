@@ -23,6 +23,7 @@ export interface UserDocument extends User, Document {
   _confirmPassword?: string; // internal storage
   correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
+  resetPasswordResetToken(): void;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -74,6 +75,10 @@ const userSchema = new Schema<UserDocument>(
         this.resetTokenExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
         return resetToken;
+      },
+      resetPasswordResetToken: function () {
+        this.passwordResetToken = undefined;
+        this.resetTokenExpires = undefined;
       },
     },
   }
