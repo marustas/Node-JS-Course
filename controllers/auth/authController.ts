@@ -77,7 +77,9 @@ const protect: RequestHandler = async (req, res, next) => {
   next();
 };
 
-const restrictTo = (...roles: UserRole[]): RequestHandler => {
+const restrictTo = <TParams, TRes, TReq, TQuery>(
+  ...roles: UserRole[]
+): RequestHandler<TParams, TRes, TReq, TQuery> => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return next(new AppError('You do not have permission to perform this action', 403));
@@ -90,4 +92,5 @@ export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
   protect,
+  restrictTo,
 };
