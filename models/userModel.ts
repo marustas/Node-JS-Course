@@ -1,4 +1,4 @@
-import { Document, model, Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
@@ -8,6 +8,7 @@ export enum UserRole {
   LEAD_GUIDE = 'lead-guide',
   ADMIN = 'admin',
 }
+
 export interface User {
   email: string;
   password: string;
@@ -16,17 +17,20 @@ export interface User {
   role: UserRole;
   passwordResetToken?: string;
   resetTokenExpires?: number;
+  _confirmPassword?: string; // internal storage
 }
 
-export interface UserDocument extends User, Document {
+interface UserVirtuals {
   confirmPassword?: string; // virtual field
-  _confirmPassword?: string; // internal storage
+}
+
+interface UserModelMethods {
   correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   resetPasswordResetToken(): void;
 }
 
-const userSchema = new Schema<UserDocument>(
+const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtuals>(
   {
     email: {
       type: String,
@@ -81,21 +85,18 @@ const userSchema = new Schema<UserDocument>(
         this.resetTokenExpires = undefined;
       },
     },
+    virtuals: {
+      confirmPassword: {
+        get: function () {
+          return this._confirmPassword;
+        },
+        set: function (value: string | undefined) {
+          this._confirmPassword = value;
+        },
+      },
+    },
   }
 );
-
-const virtualConfirmPassword = () => {
-  userSchema
-    .virtual('confirmPassword')
-    .set(function (value: string) {
-      this._confirmPassword = value;
-    })
-    .get(function () {
-      return this._confirmPassword;
-    });
-};
-
-virtualConfirmPassword();
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
@@ -107,6 +108,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-const UserModel = model<UserDocument>('User', userSchema);
+const UserModel = model('User', userSchema);
 
 export default UserModel;
