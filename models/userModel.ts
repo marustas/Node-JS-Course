@@ -17,11 +17,14 @@ export interface User {
   role: UserRole;
   passwordResetToken?: string;
   resetTokenExpires?: number;
-  _confirmPassword?: string; // internal storage
+}
+
+interface UserInternalFields {
+  _confirmPassword?: string;
 }
 
 interface UserVirtuals {
-  confirmPassword?: string; // virtual field
+  confirmPassword?: string;
 }
 
 interface UserModelMethods {
@@ -63,7 +66,7 @@ const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtu
       select: false,
     },
     resetTokenExpires: {
-      type: Date,
+      type: Number,
       select: false,
     },
   },
@@ -76,7 +79,7 @@ const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtu
         const resetToken = crypto.randomBytes(32).toString('hex');
 
         this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-        this.resetTokenExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        this.resetTokenExpires = Date.now() + 10 * 60 * 1000;
 
         return resetToken;
       },
@@ -87,10 +90,10 @@ const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtu
     },
     virtuals: {
       confirmPassword: {
-        get: function () {
+        get: function (this: User & UserInternalFields) {
           return this._confirmPassword;
         },
-        set: function (value: string | undefined) {
+        set: function (this: User & UserInternalFields, value: string | undefined) {
           this._confirmPassword = value;
         },
       },
