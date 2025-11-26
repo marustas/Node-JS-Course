@@ -1,11 +1,18 @@
 import { Document, model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 
+export enum UserRole {
+  USER = 'user',
+  GUIDE = 'guide',
+  LEAD_GUIDE = 'lead-guide',
+  ADMIN = 'admin',
+}
 export interface User {
   email: string;
   password: string;
   name: string;
   photo?: string;
+  role: UserRole;
 }
 
 export interface UserDocument extends User, Document {
@@ -37,6 +44,11 @@ const userSchema = new Schema<UserDocument>(
       trim: true,
     },
     photo: String,
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: UserRole.USER,
+    },
   },
   {
     methods: {

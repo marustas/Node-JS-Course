@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
-import type { User } from '../../models/userModel.ts';
+import type { User, UserRole } from '../../models/userModel.ts';
 
 import UserModel from '../../models/userModel.ts';
 import { catchAsync } from '../../utils/catchAsync.ts';
@@ -51,7 +51,7 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
   });
 };
 
-const protect: RequestHandler<null> = async (req, res, next) => {
+const protect: RequestHandler = async (req, res, next) => {
   const { headers } = req;
 
   const token = headers.authorization?.split(' ')[1];
@@ -73,7 +73,17 @@ const protect: RequestHandler<null> = async (req, res, next) => {
     return next(new AppError('The user belonging to this token does no longer exist.', 401));
   }
 
+  req.user = currentUser;
   next();
+};
+
+const restrictTo = (...roles: UserRole[]): RequestHandler => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission to perform this action', 403));
+    }
+    next();
+  };
 };
 
 export const authController = {
