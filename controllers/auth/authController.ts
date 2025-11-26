@@ -51,6 +51,27 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
   });
 };
 
+const forgotPassword: RequestHandler<null, null, User> = async (req, res, next) => {
+  const user = await UserModel.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppError('There is no user with that email address.', 404));
+  }
+
+  const resetToken = user.createPasswordResetToken();
+
+  await user.save({ validateBeforeSave: false }); // needed because the password field is required, but not being updated here
+
+  next();
+};
+
+const resetPassword: RequestHandler = async (req, res, next) => {
+  // To be implemented
+  next(new AppError('Reset password functionality is not implemented yet.', 501));
+
+  next();
+};
+
 const protect: RequestHandler = async (req, res, next) => {
   const { headers } = req;
 
@@ -91,6 +112,8 @@ const restrictTo = <TParams, TRes, TReq, TQuery>(
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
+  forgotPassword,
+  resetPassword,
   protect,
   restrictTo,
 };

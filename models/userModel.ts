@@ -1,5 +1,6 @@
 import { Document, model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export enum UserRole {
   USER = 'user',
@@ -13,12 +14,15 @@ export interface User {
   name: string;
   photo?: string;
   role: UserRole;
+  passwordResetToken?: string;
+  resetTokenExpires?: number;
 }
 
 export interface UserDocument extends User, Document {
   confirmPassword?: string; // virtual field
   _confirmPassword?: string; // internal storage
   correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
+  createPasswordResetToken(): string;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -49,24 +53,44 @@ const userSchema = new Schema<UserDocument>(
       enum: ['user', 'guide', 'lead-guide', 'admin'],
       default: UserRole.USER,
     },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    resetTokenExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     methods: {
       correctPassword: async (candidatePassword: string, userPassword: string) => {
         return await bcrypt.compare(candidatePassword, userPassword);
       },
+      createPasswordResetToken: function () {
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        this.resetTokenExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        return resetToken;
+      },
     },
   }
 );
 
-userSchema
-  .virtual('confirmPassword')
-  .set(function (this: UserDocument, value: string) {
-    this._confirmPassword = value;
-  })
-  .get(function (this: UserDocument) {
-    return this._confirmPassword;
-  });
+const virtualConfirmPassword = () => {
+  userSchema
+    .virtual('confirmPassword')
+    .set(function (value: string) {
+      this._confirmPassword = value;
+    })
+    .get(function () {
+      return this._confirmPassword;
+    });
+};
+
+virtualConfirmPassword();
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
