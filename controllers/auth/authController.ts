@@ -8,6 +8,7 @@ import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { env } from '../../envSchema.ts';
 import { type StringValue } from 'ms';
 import { sendEmail } from '../../utils/email.ts';
+import crypto from 'crypto';
 
 interface AuthResponsePayload extends ResponsePayload<User> {
   token: string;
@@ -91,11 +92,32 @@ const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>,
   next();
 };
 
-const resetPassword: RequestHandler = async (req, res, next) => {
-  // To be implemented
-  next(new AppError('Reset password functionality is not implemented yet.', 501));
+const resetPassword: RequestHandler<
+  { token: string },
+  ResponsePayload<{ message: string }>,
+  User
+> = async (req, res, next) => {
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
-  next();
+  const user = await UserModel.findOne({
+    passwordResetToken: hashedToken,
+    resetTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.resetTokenExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successful!',
+  });
 };
 
 const protect: RequestHandler = async (req, res, next) => {
