@@ -1,12 +1,14 @@
 import type { RequestHandler } from 'express';
 import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
-import type { User } from '../../models/userModel.ts';
+import type { User, UserRole } from '../../models/userModel.ts';
 
 import UserModel from '../../models/userModel.ts';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { env } from '../../envSchema.ts';
 import { type StringValue } from 'ms';
+import { sendEmail } from '../../utils/email.ts';
+import crypto from 'crypto';
 
 interface AuthResponsePayload extends ResponsePayload<User> {
   token: string;
@@ -51,7 +53,74 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
   });
 };
 
-const protect: RequestHandler<null> = async (req, res, next) => {
+const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>, User> = async (
+  req,
+  res,
+  next
+) => {
+  const user = await UserModel.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppError('There is no user with that email address.', 404));
+  }
+
+  const resetToken = user.createPasswordResetToken();
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset Token',
+      text: `Follow this url to reset password: ${resetUrl}`,
+    });
+  } catch {
+    user.resetPasswordResetToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new AppError('Error sending email', 500));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Token sent to email!',
+  });
+
+  next();
+};
+
+const resetPassword: RequestHandler<
+  { token: string },
+  ResponsePayload<{ message: string }>,
+  User
+> = async (req, res, next) => {
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await UserModel.findOne({
+    passwordResetToken: hashedToken,
+    resetTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.resetTokenExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successful!',
+  });
+};
+
+const protect: RequestHandler = async (req, res, next) => {
   const { headers } = req;
 
   const token = headers.authorization?.split(' ')[1];
@@ -73,11 +142,26 @@ const protect: RequestHandler<null> = async (req, res, next) => {
     return next(new AppError('The user belonging to this token does no longer exist.', 401));
   }
 
+  req.user = currentUser;
   next();
+};
+
+const restrictTo = <TParams, TRes, TReq, TQuery>(
+  ...roles: UserRole[]
+): RequestHandler<TParams, TRes, TReq, TQuery> => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission to perform this action', 403));
+    }
+    next();
+  };
 };
 
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
+  forgotPassword,
+  resetPassword,
   protect,
+  restrictTo,
 };

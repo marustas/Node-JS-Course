@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import tourController from '../controllers/tours/tourController.ts';
 import { authController } from '../controllers/auth/authController.ts';
+import { UserRole } from '../models/userModel.ts';
 
 const tourRouter = Router();
 
@@ -11,12 +12,13 @@ tourRouter.route('/tour-stats').get(tourController.getTourStats);
 tourRouter.route('/tour-monthly-plan/:year').get(tourController.getMonthlyPlan);
 
 tourRouter.all('', authController.protect);
+
 tourRouter
   .get('/', tourController.getAllTours)
   .get('/:id', tourController.getTour)
-  .post('/', tourController.createTour)
-  .put('/:id', tourController.updateTour)
-  .delete('/:id', tourController.deleteTour);
+  .post('/', authController.restrictTo(UserRole.ADMIN), tourController.createTour)
+  .put('/:id', authController.restrictTo(UserRole.ADMIN), tourController.updateTour)
+  .delete('/:id', authController.restrictTo(UserRole.ADMIN), tourController.deleteTour);
 
 tourRouter.all('', (req, res) => {
   res.status(404).json({

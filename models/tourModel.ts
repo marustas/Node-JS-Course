@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 import type { InferSchemaType } from 'mongoose';
 
@@ -102,6 +102,6 @@ tourSchema.pre('aggregate', function (next) {
 
 export type Tour = InferSchemaType<typeof tourSchema>;
 
-const TourModel = mongoose.model<Tour>('Tour', tourSchema);
+const TourModel = model<Tour>('Tour', tourSchema);
 
 export default TourModel;

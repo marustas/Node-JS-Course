@@ -1,20 +1,39 @@
-import { Document, model, Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
+export enum UserRole {
+  USER = 'user',
+  GUIDE = 'guide',
+  LEAD_GUIDE = 'lead-guide',
+  ADMIN = 'admin',
+}
 
 export interface User {
   email: string;
   password: string;
   name: string;
   photo?: string;
+  role: UserRole;
+  passwordResetToken?: string;
+  resetTokenExpires?: number;
 }
 
-export interface UserDocument extends User, Document {
-  confirmPassword?: string; // virtual field
-  _confirmPassword?: string; // internal storage
+interface UserInternalFields {
+  _confirmPassword?: string;
+}
+
+interface UserVirtuals {
+  confirmPassword?: string;
+}
+
+interface UserModelMethods {
   correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
+  createPasswordResetToken(): string;
+  resetPasswordResetToken(): void;
 }
 
-const userSchema = new Schema<UserDocument>(
+const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtuals>(
   {
     email: {
       type: String,
@@ -37,24 +56,50 @@ const userSchema = new Schema<UserDocument>(
       trim: true,
     },
     photo: String,
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: UserRole.USER,
+    },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    resetTokenExpires: {
+      type: Number,
+      select: false,
+    },
   },
   {
     methods: {
       correctPassword: async (candidatePassword: string, userPassword: string) => {
         return await bcrypt.compare(candidatePassword, userPassword);
       },
+      createPasswordResetToken: function () {
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        this.resetTokenExpires = Date.now() + 10 * 60 * 1000;
+
+        return resetToken;
+      },
+      resetPasswordResetToken: function () {
+        this.passwordResetToken = undefined;
+        this.resetTokenExpires = undefined;
+      },
+    },
+    virtuals: {
+      confirmPassword: {
+        get: function (this: User & UserInternalFields) {
+          return this._confirmPassword;
+        },
+        set: function (this: User & UserInternalFields, value: string | undefined) {
+          this._confirmPassword = value;
+        },
+      },
     },
   }
 );
-
-userSchema
-  .virtual('confirmPassword')
-  .set(function (this: UserDocument, value: string) {
-    this._confirmPassword = value;
-  })
-  .get(function (this: UserDocument) {
-    return this._confirmPassword;
-  });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
@@ -66,6 +111,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-const UserModel = model<UserDocument>('User', userSchema);
+const UserModel = model('User', userSchema);
 
 export default UserModel;
