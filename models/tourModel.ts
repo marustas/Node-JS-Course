@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 import type { InferSchemaType } from 'mongoose';
 
@@ -8,6 +8,8 @@ const tourSchema = new Schema({
     required: [true, 'A tour must have a name'],
     unique: true,
     trim: true,
+    maxlength: [40, 'A tour name must have less or equal than 40 characters'],
+    minlength: [10, 'A tour name must have more or equal than 10 characters'],
   },
   duration: {
     type: Number,
@@ -20,10 +22,13 @@ const tourSchema = new Schema({
   difficulty: {
     type: String,
     required: [true, 'A tour must have a difficulty'],
+    enum: { values: ['easy', 'medium', 'difficult'], message: 'Invalid difficulty' },
   },
   ratingAverage: {
     type: Number,
     default: 0,
+    min: [1, 'A tour rating must be above 1.0'],
+    max: [5, 'A tour rating must be below 5.0'],
   },
   ratingQuantity: {
     type: Number,
@@ -35,6 +40,13 @@ const tourSchema = new Schema({
   },
   priceDiscount: {
     type: Number,
+    validate: {
+      // only works for new document creation, because "this" points to current document in creation
+      validator: function (value: number) {
+        return value < this.price;
+      },
+      message: 'Discount price ({VALUE}) should be below regular price',
+    },
   },
   summary: {
     type: String,
@@ -56,6 +68,29 @@ const tourSchema = new Schema({
   },
   startDates: [Date],
   secretTour: Boolean,
+  startLocation: {
+    type: {
+      type: String,
+      default: 'Point',
+      enum: ['Point'],
+    },
+    coordinates: [Number],
+    address: String,
+    description: String,
+  },
+  locations: [
+    {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+      day: Number,
+    },
+  ],
 });
 
 tourSchema.pre('aggregate', function (next) {
@@ -67,6 +102,6 @@ tourSchema.pre('aggregate', function (next) {
 
 export type Tour = InferSchemaType<typeof tourSchema>;
 
-const TourModel = mongoose.model<Tour>('Tour', tourSchema);
+const TourModel = model<Tour>('Tour', tourSchema);
 
 export default TourModel;
