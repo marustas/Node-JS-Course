@@ -157,11 +157,40 @@ const restrictTo = <TParams, TRes, TReq, TQuery>(
   };
 };
 
+const updatePassword: RequestHandler<unknown, AuthResponsePayload, User> = async (
+  req,
+  res,
+  next
+) => {
+  const { password: newPassword } = req.body;
+
+  if (!newPassword) {
+    return next(new AppError('Please provide new password', 400));
+  }
+
+  const user = await UserModel.findById(req.user._id).select('+password');
+
+  if (!user || !(await user.correctPassword(newPassword, user.password))) {
+    return next(new AppError('Your current password is wrong', 401));
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+};
+
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
   forgotPassword,
   resetPassword,
+  updatePassword: catchAsync(updatePassword),
   protect,
   restrictTo,
 };

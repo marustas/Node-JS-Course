@@ -111,6 +111,13 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (this.isModified('password') && this.password !== this.confirmPassword) {
+    return next(new Error('Passwords do not match'));
+  }
+  next();
+});
+
 const UserModel = model('User', userSchema);
 
 export default UserModel;
