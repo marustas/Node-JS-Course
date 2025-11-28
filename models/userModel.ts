@@ -19,6 +19,7 @@ export interface User {
   role: UserRole;
   passwordResetToken?: string;
   resetTokenExpires?: number;
+  active: boolean;
 }
 
 interface UserInternalFields {
@@ -71,6 +72,11 @@ const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtu
       type: Number,
       select: false,
     },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
   },
   {
     methods: {
@@ -117,6 +123,11 @@ userSchema.pre('save', function (next) {
   if (this.isModified('password') && this.password !== this.confirmPassword) {
     return next(new Error('Passwords do not match'));
   }
+  next();
+});
+
+userSchema.pre(['find', 'findOne'], async function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 

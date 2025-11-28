@@ -205,6 +205,15 @@ const updateMe: RequestHandler<
   });
 };
 
+const deleteMe: RequestHandler<unknown, ResponsePayload<null>, User> = async (req, res) => {
+  await UserModel.findByIdAndUpdate(req.user._id, { active: false });
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+};
+
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
@@ -212,6 +221,7 @@ export const authController = {
   resetPassword,
   updatePassword: catchAsync(updatePassword),
   updateMe: catchAsync(updateMe),
+  deleteMe: catchAsync(deleteMe),
   protect,
   restrictTo,
 };
