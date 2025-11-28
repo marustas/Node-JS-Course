@@ -2,12 +2,14 @@ import { model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
-export enum UserRole {
-  USER = 'user',
-  GUIDE = 'guide',
-  LEAD_GUIDE = 'lead-guide',
-  ADMIN = 'admin',
-}
+export const UserRole = {
+  USER: 'user',
+  GUIDE: 'guide',
+  LEAD_GUIDE: 'lead-guide',
+  ADMIN: 'admin',
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
   email: string;

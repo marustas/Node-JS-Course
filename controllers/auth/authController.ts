@@ -185,12 +185,33 @@ const updatePassword: RequestHandler<unknown, AuthResponsePayload, User> = async
   });
 };
 
+const updateMe: RequestHandler<
+  unknown,
+  ResponsePayload<User>,
+  Omit<User, 'password' | 'role'>
+> = async (req, res, next) => {
+  const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: user,
+  });
+};
+
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
   forgotPassword,
   resetPassword,
   updatePassword: catchAsync(updatePassword),
+  updateMe: catchAsync(updateMe),
   protect,
   restrictTo,
 };

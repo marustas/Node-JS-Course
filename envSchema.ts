@@ -8,7 +8,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string(),
   EMAIL_HOST: z.string().min(1),
-  EMAIL_PORT: z.number().default(587),
+  EMAIL_PORT: z.string().default('587'),
   EMAIL_USERNAME: z.string().min(1),
   EMAIL_PASSWORD: z.string().min(1),
   EMAIL_SENDER_ADDRESS: z.email(),
