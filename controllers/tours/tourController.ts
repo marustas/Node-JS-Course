@@ -1,11 +1,11 @@
 import type { RequestHandler } from 'express';
-import type { Tour } from '../../models/tourModel.ts';
+
 import type { ResponsePayload } from '../../models/ApiModels.ts';
 
-import TourModel from '../../models/tourModel.ts';
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
+import TourModel, { type Tour } from '../../models/tourModel.ts';
 
 interface TourParams {
   id: string;
