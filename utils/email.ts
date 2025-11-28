@@ -12,7 +12,7 @@ export const sendEmail = async (options: Omit<MailOptions, 'from'>) => {
 
   const transporter = createTransport({
     host: env.EMAIL_HOST,
-    port: env.EMAIL_PORT,
+    port: Number(env.EMAIL_PORT),
     auth: {
       user: env.EMAIL_USERNAME,
       pass: env.EMAIL_PASSWORD,
