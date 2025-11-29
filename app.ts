@@ -4,8 +4,9 @@ import { errorController } from './controllers/errorController.ts';
 import authRouter from './routes/authRouter.ts';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import ExpressMongoSanitize from 'express-mongo-sanitize';
+
 import { xssSanitizer } from './utils/sanitizer.ts';
+import { sanitizeMongo } from './utils/sanitizeMongo.ts';
 
 const app = express();
 
@@ -19,11 +20,12 @@ app.use(helmet());
 
 app.use('/api', limiter);
 
-app.use(ExpressMongoSanitize());
+app.use(express.json());
 
 app.use(xssSanitizer);
 
-app.use(express.json());
+app.use(sanitizeMongo);
+
 app.use('/api/tours', tourRouter);
 app.use('/api/auth', authRouter);
 

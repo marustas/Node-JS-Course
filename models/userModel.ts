@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { AppError } from './ApiModels.ts';
 
 export const UserRole = {
   USER: 'user',
@@ -109,6 +110,14 @@ const userSchema = new Schema<User, unknown, UserModelMethods, object, UserVirtu
   }
 );
 
+userSchema.pre('save', function (next) {
+  console.log(this.password, this.confirmPassword);
+  if (this.isModified('password') && this.password !== this.confirmPassword) {
+    return next(new AppError('Passwords do not match', 400));
+  }
+  next();
+});
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
@@ -116,13 +125,6 @@ userSchema.pre('save', async function (next) {
 
   this.password = await bcrypt.hash(this.password, 12);
 
-  next();
-});
-
-userSchema.pre('save', function (next) {
-  if (this.isModified('password') && this.password !== this.confirmPassword) {
-    return next(new Error('Passwords do not match'));
-  }
   next();
 });
 
