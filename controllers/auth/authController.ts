@@ -10,6 +10,9 @@ import { type StringValue } from 'ms';
 import { sendEmail } from '../../utils/email.ts';
 import crypto from 'crypto';
 
+import type { Response } from 'express';
+import type { HydratedDocument } from 'mongoose';
+
 interface AuthResponsePayload extends ResponsePayload<User> {
   token: string;
 }
@@ -17,6 +20,26 @@ interface AuthResponsePayload extends ResponsePayload<User> {
 const signToken = <T>(userId: T) => {
   return jwt.sign({ id: userId }, env.JWT_SECRET, {
     expiresIn: env.JWT_EXPIRES_IN as StringValue,
+  });
+};
+
+const createSendToken = (
+  user: HydratedDocument<User>,
+  statusCode: number,
+  res: Response<AuthResponsePayload>
+) => {
+  const token = signToken(user._id);
+
+  res.cookie('jwt', token, {
+    expires: new Date(Date.now() + (env.JWT_COOKIE_EXPIRES_IN as number) * 24 * 60 * 60 * 1000), // days to milliseconds
+    httpOnly: true,
+    secure: env.ENVIRONMENT === 'production',
+  });
+
+  res.status(statusCode).json({
+    status: 'success',
+    data: user,
+    token,
   });
 };
 
@@ -45,12 +68,7 @@ const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, 
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 };
 
 const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>, User> = async (
@@ -177,12 +195,7 @@ const updatePassword: RequestHandler<unknown, AuthResponsePayload, User> = async
   user.password = newPassword;
   await user.save();
 
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 };
 
 const updateMe: RequestHandler<
