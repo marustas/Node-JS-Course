@@ -7,6 +7,7 @@ const envSchema = z.object({
   ENVIRONMENT: z.enum(['development', 'production', 'test']).default('development'),
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string(),
+  JWT_COOKIE_EXPIRES_IN: z.string().transform((val) => parseInt(val, 10)),
   EMAIL_HOST: z.string().min(1),
   EMAIL_PORT: z.string().default('587'),
   EMAIL_USERNAME: z.string().min(1),
