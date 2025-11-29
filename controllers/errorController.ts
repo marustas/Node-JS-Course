@@ -21,7 +21,8 @@ const sendDevelopmentError = (error: AppError, res: Response) => {
   });
 };
 
-export const errorController: ErrorRequestHandler = (err, _req, res) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const errorController: ErrorRequestHandler = (err, _req, res, next) => {
   const environment = env.ENVIRONMENT;
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
