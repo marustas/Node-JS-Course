@@ -21,7 +21,7 @@ const sendDevelopmentError = (error: AppError, res: Response) => {
   });
 };
 
-export const errorController: ErrorRequestHandler = (err, _req, res, next) => {
+export const errorController: ErrorRequestHandler = (err, _req, res) => {
   const environment = env.ENVIRONMENT;
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
