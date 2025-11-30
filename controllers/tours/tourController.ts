@@ -46,7 +46,7 @@ const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = a
 ) => {
   const { id } = req.params;
 
-  const tour = await TourModel.findById(id).populate('guides');
+  const tour = await TourModel.findById(id);
 
   if (!tour) {
     return next(new AppError('Tour not found', 404));
