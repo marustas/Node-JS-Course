@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { model, Schema } from 'mongoose';
 
 import type { InferSchemaType } from 'mongoose';
@@ -91,6 +92,7 @@ const tourSchema = new Schema({
       day: Number,
     },
   ],
+  guides: [{ type: ObjectId, ref: 'User' }],
 });
 
 tourSchema.pre('aggregate', function (next) {

@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 
-import type { ResponsePayload } from '../../models/ApiModels.ts';
+import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
 
 import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
@@ -39,16 +39,17 @@ const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQuery
   });
 };
 
-const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = async (req, res) => {
+const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = async (
+  req,
+  res,
+  next
+) => {
   const { id } = req.params;
 
-  const tour = await TourModel.findById(id);
+  const tour = await TourModel.findById(id).populate('guides');
 
   if (!tour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
+    return next(new AppError('Tour not found', 404));
   }
 
   res.status(200).json({
@@ -57,26 +58,27 @@ const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = a
   });
 };
 
-const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = async (req, res) => {
-  try {
-    const newTour = await TourModel.create(req.body);
+const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = async (
+  req,
+  res,
+  next
+) => {
+  const newTour = await TourModel.create(req.body);
 
-    res.status(201).json({
-      status: 'success',
-      data: newTour,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to create tour',
-      error: error,
-    });
+  if (!newTour) {
+    return next(new AppError('Failed to create tour', 400));
   }
+
+  res.status(201).json({
+    status: 'success',
+    data: newTour,
+  });
 };
 
 const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> = async (
   req,
-  res
+  res,
+  next
 ) => {
   const { id } = req.params;
 
@@ -86,10 +88,7 @@ const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> 
   });
 
   if (!updatedTour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
+    return next(new AppError('Tour not found', 404));
   }
 
   res.status(200).json({
@@ -100,17 +99,15 @@ const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> 
 
 const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> = async (
   req,
-  res
+  res,
+  next
 ) => {
   const { id } = req.params;
 
   const deletedTour = await TourModel.findByIdAndDelete(id);
 
   if (!deletedTour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
+    return next(new AppError('Tour not found', 404));
   }
 
   res.status(204).json({
