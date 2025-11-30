@@ -16,12 +16,12 @@ const reviewSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
-  tours: [{ type: ObjectId, ref: 'Tour' }],
-  users: [{ type: ObjectId, ref: 'User' }],
+  tour: { type: ObjectId, ref: 'Tour' },
+  user: { type: ObjectId, ref: 'User' },
 });
 
 reviewSchema.pre(['find', 'findOne'], async function (next) {
-  this.populate({ path: 'users tours', select: '-__v -passwordChangedAt' });
+  this.populate({ path: 'user', select: '-__v -passwordChangedAt -photo' });
   next();
 });
 

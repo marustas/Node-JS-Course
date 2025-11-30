@@ -6,6 +6,7 @@ import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
+import type { Review } from '../../models/reviewModel.ts';
 
 interface TourParams {
   id: string;
@@ -46,7 +47,7 @@ const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = a
 ) => {
   const { id } = req.params;
 
-  const tour = await TourModel.findById(id);
+  const tour = await TourModel.findById(id).populate<{ reviews: Review[] }>('reviews');
 
   if (!tour) {
     return next(new AppError('Tour not found', 404));

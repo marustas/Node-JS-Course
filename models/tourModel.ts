@@ -1,7 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { model, Schema } from 'mongoose';
-
-import type { InferSchemaType } from 'mongoose';
+import { model, Schema, type InferSchemaType } from 'mongoose';
 
 const tourSchema = new Schema({
   name: {
@@ -104,11 +102,12 @@ tourSchema.pre('aggregate', function (next) {
 
 tourSchema.pre(['find', 'findOne', 'findOneAndUpdate'], async function (next) {
   this.populate({ path: 'guides', select: '-__v -passwordChangedAt' });
+
   next();
 });
 
 export type Tour = InferSchemaType<typeof tourSchema>;
 
-const TourModel = model<Tour>('Tour', tourSchema);
+const TourModel = model('Tour', tourSchema);
 
 export default TourModel;
