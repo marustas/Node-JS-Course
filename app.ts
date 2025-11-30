@@ -7,6 +7,7 @@ import helmet from 'helmet';
 
 import { xssSanitizer } from './utils/sanitizer.ts';
 import { sanitizeMongo } from './utils/sanitizeMongo.ts';
+import { reviewRouter } from './routes/reviewRouter.ts';
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use(sanitizeMongo);
 
 app.use('/api/tours', tourRouter);
 app.use('/api/auth', authRouter);
+
+app.use('/api/reviews', reviewRouter);
 
 app.use(errorController);
 
