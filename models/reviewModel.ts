@@ -1,5 +1,4 @@
 import { model, Schema, type InferSchemaType } from 'mongoose';
-import { ObjectId } from 'mongodb';
 
 const reviewSchema = new Schema({
   review: {
@@ -16,8 +15,8 @@ const reviewSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
-  tour: { type: ObjectId, ref: 'Tour' },
-  user: { type: ObjectId, ref: 'User' },
+  tour: { type: Schema.Types.ObjectId, ref: 'Tour' },
+  user: { type: Schema.Types.ObjectId, ref: 'User' },
 });
 
 reviewSchema.pre(['find', 'findOne'], async function (next) {
