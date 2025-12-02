@@ -7,6 +7,7 @@ import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
 import type { Review } from '../../models/reviewModel.ts';
+import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
 
 interface TourParams {
   id: string;
@@ -98,24 +99,7 @@ const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> 
   });
 };
 
-const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> = async (
-  req,
-  res,
-  next
-) => {
-  const { id } = req.params;
-
-  const deletedTour = await TourModel.findByIdAndDelete(id);
-
-  if (!deletedTour) {
-    return next(new AppError('Tour not found', 404));
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-};
+const deleteTour = deleteRequestHandler<Tour, TourParams, null, null>(TourModel, 'Tour not found');
 
 const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = (
   req,
