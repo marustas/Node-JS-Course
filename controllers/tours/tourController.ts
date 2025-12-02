@@ -8,6 +8,7 @@ import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
 import type { Review } from '../../models/reviewModel.ts';
 import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
+import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
 
 interface TourParams {
   id: string;
@@ -77,27 +78,7 @@ const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = asyn
   });
 };
 
-const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> = async (
-  req,
-  res,
-  next
-) => {
-  const { id } = req.params;
-
-  const updatedTour = await TourModel.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!updatedTour) {
-    return next(new AppError('Tour not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: updatedTour,
-  });
-};
+const updateTour = updateRequestHandler<Tour, TourParams, Tour>(TourModel, 'Tour not found');
 
 const deleteTour = deleteRequestHandler<Tour, TourParams, null, null>(TourModel, 'Tour not found');
 
