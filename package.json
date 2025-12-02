@@ -16,13 +16,17 @@
   "license": "ISC",
   "dependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/geojson": "^7946.0.16",
     "bcrypt": "^6.0.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.3",
     "nodemailer": "^7.0.11",
     "typescript": "^5.9.3",
+    "xss": "^1.0.15",
     "zod": "^4.1.12"
   },
   "devDependencies": {

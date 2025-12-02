@@ -1,11 +1,15 @@
 import type { RequestHandler } from 'express';
 
-import type { ResponsePayload } from '../../models/ApiModels.ts';
+import { type ResponsePayload } from '../../models/ApiModels.ts';
 
-import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
+
+import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
+import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
+import { createRequestHandler } from '../../utils/createRequestHandler.ts';
+import { getRequestHandler, getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
 
 interface TourParams {
   id: string;
@@ -25,99 +29,41 @@ interface MonthlyPlan {
   tours: string[];
 }
 
-const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
-  req,
-  res
-) => {
-  const tourQuery = new TourQuery(TourModel.find(), req.query).filter().sort().paginate();
+type TourFilters = Required<
+  Omit<
+    Tour,
+    | 'summary'
+    | 'description'
+    | 'imageCover'
+    | 'images'
+    | 'startDates'
+    | 'createdAt'
+    | 'locations'
+    | 'startLocation'
+  >
+>;
 
-  const filteredTours = await tourQuery.getQuery();
+type Direction = 'asc' | 'desc';
 
-  res.status(200).json({
-    status: 'success',
-    data: filteredTours,
-  });
-};
+interface TourQueryFeatures extends TourFilters {
+  page?: number;
+  limit?: number;
+  sortBy: `${keyof TourFilters}:${Direction}`;
+}
 
-const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = async (req, res) => {
-  const { id } = req.params;
+const getAllTours = getRequestHandler(TourModel, {
+  query: true,
+});
 
-  const tour = await TourModel.findById(id);
+const getTour = getRequestHandlerSingle<Tour, TourParams, Tour>(TourModel, 'Tour not found', {
+  populate: 'reviews',
+});
 
-  if (!tour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
-  }
+const createTour = createRequestHandler<Tour, Tour>(TourModel, 'Failed to create tour');
 
-  res.status(200).json({
-    status: 'success',
-    data: tour,
-  });
-};
+const updateTour = updateRequestHandler<Tour, TourParams, Tour>(TourModel, 'Tour not found');
 
-const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = async (req, res) => {
-  try {
-    const newTour = await TourModel.create(req.body);
-
-    res.status(201).json({
-      status: 'success',
-      data: newTour,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to create tour',
-      error: error,
-    });
-  }
-};
-
-const updateTour: RequestHandler<TourParams, ResponsePayload<Tour>, Tour, null> = async (
-  req,
-  res
-) => {
-  const { id } = req.params;
-
-  const updatedTour = await TourModel.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!updatedTour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: updatedTour,
-  });
-};
-
-const deleteTour: RequestHandler<TourParams, ResponsePayload<null>, null, null> = async (
-  req,
-  res
-) => {
-  const { id } = req.params;
-
-  const deletedTour = await TourModel.findByIdAndDelete(id);
-
-  if (!deletedTour) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Tour not found',
-    });
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-};
+const deleteTour = deleteRequestHandler<Tour, TourParams, null, null>(TourModel, 'Tour not found');
 
 const aliasTopTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = (
   req,
