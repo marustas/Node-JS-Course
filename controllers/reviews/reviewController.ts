@@ -4,11 +4,15 @@ import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import { ObjectId } from 'mongodb';
 
-const getAllReviews: RequestHandler<null, ResponsePayload<Review[]>, null, null> = async (
-  req,
-  res
-) => {
-  const reviews = await ReviewModel.find();
+const getAllReviews: RequestHandler<
+  { tourId: string },
+  ResponsePayload<Review[]>,
+  null,
+  null
+> = async (req, res) => {
+  const { tourId } = req.params;
+
+  const reviews = await ReviewModel.find(tourId ? { tour: new ObjectId(tourId) } : {});
 
   res.status(200).json({
     status: 'success',
