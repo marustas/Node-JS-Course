@@ -90,6 +90,7 @@ const tourSchema = new Schema({
       day: Number,
     },
   ],
+
   guides: [{ type: ObjectId, ref: 'User' }],
 });
 
