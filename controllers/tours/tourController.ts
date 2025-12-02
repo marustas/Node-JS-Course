@@ -1,15 +1,15 @@
 import type { RequestHandler } from 'express';
 
-import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
+import { type ResponsePayload } from '../../models/ApiModels.ts';
 
-import TourQuery, { type TourQueryFeatures } from './tourQuery.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
-import type { Review } from '../../models/reviewModel.ts';
+
 import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
 import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
 import { createRequestHandler } from '../../utils/createRequestHandler.ts';
+import { getRequestHandler, getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
 
 interface TourParams {
   id: string;
@@ -29,38 +29,35 @@ interface MonthlyPlan {
   tours: string[];
 }
 
-const getAllTours: RequestHandler<null, ResponsePayload<Tour[]>, null, TourQueryFeatures> = async (
-  req,
-  res
-) => {
-  const tourQuery = new TourQuery(TourModel.find(), req.query).filter().sort().paginate();
+type TourFilters = Required<
+  Omit<
+    Tour,
+    | 'summary'
+    | 'description'
+    | 'imageCover'
+    | 'images'
+    | 'startDates'
+    | 'createdAt'
+    | 'locations'
+    | 'startLocation'
+  >
+>;
 
-  const filteredTours = await tourQuery.getQuery();
+type Direction = 'asc' | 'desc';
 
-  res.status(200).json({
-    status: 'success',
-    data: filteredTours,
-  });
-};
+interface TourQueryFeatures extends TourFilters {
+  page?: number;
+  limit?: number;
+  sortBy: `${keyof TourFilters}:${Direction}`;
+}
 
-const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = async (
-  req,
-  res,
-  next
-) => {
-  const { id } = req.params;
+const getAllTours = getRequestHandler(TourModel, {
+  query: true,
+});
 
-  const tour = await TourModel.findById(id).populate<{ reviews: Review[] }>('reviews');
-
-  if (!tour) {
-    return next(new AppError('Tour not found', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: tour,
-  });
-};
+const getTour = getRequestHandlerSingle<Tour, TourParams, Tour>(TourModel, 'Tour not found', {
+  populate: 'reviews',
+});
 
 const createTour = createRequestHandler<Tour, Tour>(TourModel, 'Failed to create tour');
 

@@ -1,43 +1,26 @@
-import { Query } from 'mongoose';
-import type { Tour } from '../../models/tourModel.ts';
-import { parseOperators } from '../../utils/parseQueryOperator.ts';
-
-type TourFilters = Required<
-  Omit<
-    Tour,
-    | 'summary'
-    | 'description'
-    | 'imageCover'
-    | 'images'
-    | 'startDates'
-    | 'createdAt'
-    | 'locations'
-    | 'startLocation'
-  >
->;
+import type { Query } from 'mongoose';
+import { parseOperators } from './parseQueryOperator.ts';
 
 type Direction = 'asc' | 'desc';
 
-export interface TourQueryFeatures extends TourFilters {
+export interface QueryFeatures {
   page?: number;
   limit?: number;
-  sortBy: `${keyof TourFilters}:${Direction}`;
+  sortBy: `${string}:${Direction}`;
 }
 
-type TourQueryType = Query<Tour[], Tour>;
+class RequestQuery<TModel> {
+  private query: Query<TModel[], TModel>;
+  private queryString: QueryFeatures;
 
-class TourQuery {
-  private query: TourQueryType;
-  private queryString: TourQueryFeatures;
-
-  constructor(query: TourQueryType, queryString: TourQueryFeatures) {
+  constructor(query: Query<TModel[], TModel>, queryString: QueryFeatures) {
     this.query = query;
     this.queryString = queryString;
   }
 
   filter() {
     const { ...filters } = this.queryString;
-    const parsedFilters = parseOperators<TourFilters>(filters);
+    const parsedFilters = parseOperators(filters);
 
     this.query = this.query.find(parsedFilters);
 
@@ -71,4 +54,4 @@ class TourQuery {
   }
 }
 
-export default TourQuery;
+export default RequestQuery;
