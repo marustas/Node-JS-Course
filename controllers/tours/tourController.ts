@@ -9,6 +9,7 @@ import TourModel, { type Tour } from '../../models/tourModel.ts';
 import type { Review } from '../../models/reviewModel.ts';
 import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
 import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
+import { createRequestHandler } from '../../utils/createRequestHandler.ts';
 
 interface TourParams {
   id: string;
@@ -61,22 +62,7 @@ const getTour: RequestHandler<TourParams, ResponsePayload<Tour>, null, null> = a
   });
 };
 
-const createTour: RequestHandler<null, ResponsePayload<Tour>, Tour, null> = async (
-  req,
-  res,
-  next
-) => {
-  const newTour = await TourModel.create(req.body);
-
-  if (!newTour) {
-    return next(new AppError('Failed to create tour', 400));
-  }
-
-  res.status(201).json({
-    status: 'success',
-    data: newTour,
-  });
-};
+const createTour = createRequestHandler<Tour, Tour>(TourModel, 'Failed to create tour');
 
 const updateTour = updateRequestHandler<Tour, TourParams, Tour>(TourModel, 'Tour not found');
 
