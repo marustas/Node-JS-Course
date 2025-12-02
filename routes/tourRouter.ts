@@ -2,6 +2,7 @@ import { Router } from 'express';
 import tourController from '../controllers/tours/tourController.ts';
 import { authController } from '../controllers/auth/authController.ts';
 import { UserRole } from '../models/userModel.ts';
+import { reviewRouter } from './reviewRouter.ts';
 
 const tourRouter = Router();
 
@@ -12,6 +13,8 @@ tourRouter.route('/tour-stats').get(tourController.getTourStats);
 tourRouter.route('/tour-monthly-plan/:year').get(tourController.getMonthlyPlan);
 
 tourRouter.all('', authController.protect);
+
+tourRouter.use('/:tourId/reviews', reviewRouter);
 
 tourRouter
   .get('/', tourController.getAllTours)
