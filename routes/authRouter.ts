@@ -11,4 +11,6 @@ authRouter.patch('/updateMyPassword', authController.protect, authController.upd
 authRouter.patch('/updateMe', authController.protect, authController.updateMe);
 authRouter.delete('/deleteMe', authController.protect, authController.deleteMe);
 
+authRouter.get('/me', authController.protect, authController.getMe, authController.getUser);
+
 export default authRouter;
