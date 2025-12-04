@@ -12,7 +12,7 @@ tourRouter.route('/tour-stats').get(tourController.getTourStats);
 
 tourRouter.route('/tour-monthly-plan/:year').get(tourController.getMonthlyPlan);
 
-tourRouter.all('', authController.protect);
+tourRouter.use(authController.protect);
 
 tourRouter.use('/:tourId/reviews', reviewRouter);
 
