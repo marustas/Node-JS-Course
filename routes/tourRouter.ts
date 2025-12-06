@@ -18,6 +18,8 @@ tourRouter.use(authController.protect);
 
 tourRouter.use('/:tourId/reviews', reviewRouter);
 
+tourRouter.use('/:tourId/reviews', reviewRouter);
+
 tourRouter
   .post('/', authController.restrictTo(UserRole.ADMIN), tourController.createTour)
   .put('/:id', authController.restrictTo(UserRole.ADMIN), tourController.updateTour)

@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 
 import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
 
-import { type FilterQuery, type PipelineStage } from 'mongoose';
+import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
 
