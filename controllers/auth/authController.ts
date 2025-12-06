@@ -227,6 +227,32 @@ const deleteMe: RequestHandler<unknown, ResponsePayload<null>, User> = async (re
   });
 };
 
+const getMe: RequestHandler<{ id?: string }, ResponsePayload<User>, User> = async (
+  req,
+  res,
+  next
+) => {
+  req.params.id = req.user._id;
+  next();
+};
+
+const getUser: RequestHandler<{ id: string }, ResponsePayload<User>, User> = async (
+  req,
+  res,
+  next
+) => {
+  const user = await UserModel.findById(req.params.id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: user,
+  });
+};
+
 export const authController = {
   login: catchAsync(login),
   signUp: catchAsync(signUp),
@@ -235,6 +261,8 @@ export const authController = {
   updatePassword: catchAsync(updatePassword),
   updateMe: catchAsync(updateMe),
   deleteMe: catchAsync(deleteMe),
+  getMe,
+  getUser: catchAsync(getUser),
   protect,
   restrictTo,
 };
