@@ -12,16 +12,22 @@ tourRouter.route('/tour-stats').get(tourController.getTourStats);
 
 tourRouter.route('/tour-monthly-plan/:year').get(tourController.getMonthlyPlan);
 
-tourRouter.all('', authController.protect);
+tourRouter.get('/', tourController.getAllTours).get('/:id', tourController.getTour);
+
+tourRouter.use(authController.protect);
 
 tourRouter.use('/:tourId/reviews', reviewRouter);
 
 tourRouter
-  .get('/', tourController.getAllTours)
-  .get('/:id', tourController.getTour)
   .post('/', authController.restrictTo(UserRole.ADMIN), tourController.createTour)
   .put('/:id', authController.restrictTo(UserRole.ADMIN), tourController.updateTour)
   .delete('/:id', authController.restrictTo(UserRole.ADMIN), tourController.deleteTour);
+
+tourRouter
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+tourRouter.get('/distances/:latlng', tourController.getDistances);
 
 tourRouter.all('', (req, res) => {
   res.status(404).json({

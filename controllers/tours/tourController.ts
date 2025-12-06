@@ -1,8 +1,8 @@
 import type { RequestHandler } from 'express';
 
-import { type ResponsePayload } from '../../models/ApiModels.ts';
+import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
 
-import type { FilterQuery, PipelineStage } from 'mongoose';
+import { type FilterQuery, type PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
 import TourModel, { type Tour } from '../../models/tourModel.ts';
 
@@ -168,6 +168,78 @@ export const getMonthlyPlan: RequestHandler<
   }
 };
 
+interface GeoTourParams {
+  distance: string;
+  latlng: string;
+  unit: 'mi' | 'km';
+}
+
+const getToursWithin: RequestHandler<GeoTourParams, ResponsePayload<Tour[]>, null, null> = async (
+  req,
+  res,
+  next
+) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const radius = unit === 'mi' ? parseFloat(distance) / 3963.2 : parseFloat(distance) / 6378.1;
+
+  if (!lat || !lng) {
+    return next(new AppError('Please provide latitude and longitude in the format lat,lng.'));
+  }
+
+  const tours = await TourModel.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [[lng, lat], radius],
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: tours,
+  });
+};
+
+const getDistances: RequestHandler<
+  { latlng: string; unit: 'mi' | 'km' },
+  ResponsePayload<{ distance: number; name: string }[]>,
+  null,
+  null
+> = async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  if (!lat || !lng) {
+    return next(new AppError('Please provide latitude and longitude in the format lat,lng.'));
+  }
+
+  const distances = await TourModel.aggregate<{ distance: number; name: string }>([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [parseFloat(lng), parseFloat(lat)],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: unit === 'mi' ? 0.000621371 : 0.001,
+      },
+    } satisfies PipelineStage.GeoNear,
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    } satisfies PipelineStage.Project,
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: distances,
+  });
+};
+
 const tourController = {
   aliasTopTours,
   getMonthlyPlan,
@@ -177,6 +249,8 @@ const tourController = {
   createTour: catchAsync(createTour),
   updateTour: catchAsync(updateTour),
   deleteTour: catchAsync(deleteTour),
+  getToursWithin: catchAsync(getToursWithin),
+  getDistances: catchAsync(getDistances),
 };
 
 export default tourController;

@@ -28,6 +28,7 @@ const tourSchema = new Schema({
     default: 0,
     min: [1, 'A tour rating must be above 1.0'],
     max: [5, 'A tour rating must be below 5.0'],
+    set: (val: number) => Math.round(val * 10) / 10,
   },
   ratingQuantity: {
     type: Number,
@@ -94,12 +95,15 @@ const tourSchema = new Schema({
   guides: [{ type: ObjectId, ref: 'User' }],
 });
 
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({
-    $match: { secretTour: { $ne: true } },
-  });
-  next();
-});
+tourSchema.index({ startLocation: '2dsphere' });
+
+// commented out becase geoNear should always be the first stage
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({
+//     $match: { secretTour: { $ne: true } },
+//   });
+//   next();
+// });
 
 tourSchema.pre(['find', 'findOne', 'findOneAndUpdate'], async function (next) {
   this.populate({ path: 'guides', select: '-__v -passwordChangedAt' });
