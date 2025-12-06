@@ -27,6 +27,8 @@ tourRouter
   .route('/tours-within/:distance/center/:latlng/unit/:unit')
   .get(tourController.getToursWithin);
 
+tourRouter.get('/distances/:latlng', tourController.getDistances);
+
 tourRouter.all('', (req, res) => {
   res.status(404).json({
     status: 'fail',

@@ -97,12 +97,13 @@ const tourSchema = new Schema({
 
 tourSchema.index({ startLocation: '2dsphere' });
 
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({
-    $match: { secretTour: { $ne: true } },
-  });
-  next();
-});
+// commented out becase geoNear should always be the first stage
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({
+//     $match: { secretTour: { $ne: true } },
+//   });
+//   next();
+// });
 
 tourSchema.pre(['find', 'findOne', 'findOneAndUpdate'], async function (next) {
   this.populate({ path: 'guides', select: '-__v -passwordChangedAt' });
