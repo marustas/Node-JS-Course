@@ -95,6 +95,8 @@ const tourSchema = new Schema({
   guides: [{ type: ObjectId, ref: 'User' }],
 });
 
+tourSchema.index({ startLocation: '2dsphere' });
+
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({
     $match: { secretTour: { $ne: true } },

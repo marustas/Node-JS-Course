@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 
-import { type ResponsePayload } from '../../models/ApiModels.ts';
+import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
 
 import type { FilterQuery, PipelineStage } from 'mongoose';
 import { catchAsync } from '../../utils/catchAsync.ts';
@@ -168,6 +168,40 @@ export const getMonthlyPlan: RequestHandler<
   }
 };
 
+interface GeoTourParams {
+  distance: string;
+  latlng: string;
+  unit: 'mi' | 'km';
+}
+
+const getToursWithin: RequestHandler<GeoTourParams, ResponsePayload<Tour[]>, null, null> = async (
+  req,
+  res,
+  next
+) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const radius = unit === 'mi' ? parseFloat(distance) / 3963.2 : parseFloat(distance) / 6378.1;
+
+  if (!lat || !lng) {
+    return next(new AppError('Please provide latitude and longitude in the format lat,lng.'));
+  }
+
+  const tours = await TourModel.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [[lng, lat], radius],
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: tours,
+  });
+};
+
 const tourController = {
   aliasTopTours,
   getMonthlyPlan,
@@ -177,6 +211,7 @@ const tourController = {
   createTour: catchAsync(createTour),
   updateTour: catchAsync(updateTour),
   deleteTour: catchAsync(deleteTour),
+  getToursWithin: catchAsync(getToursWithin),
 };
 
 export default tourController;
