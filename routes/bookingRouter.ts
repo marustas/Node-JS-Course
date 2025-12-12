@@ -3,7 +3,7 @@ import { bookingController } from '../controllers/bookings/bookingController.ts'
 import { authController } from '../controllers/auth/authController.ts';
 import { UserRole } from '../models/userModel.ts';
 
-const bookingRouter = Router();
+const bookingRouter = Router({ mergeParams: true });
 
 bookingRouter.use(
   authController.protect,

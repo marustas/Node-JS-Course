@@ -1,9 +1,12 @@
 import { catchAsync } from '../../utils/catchAsync.ts';
 import { createRequestHandler } from '../../utils/createRequestHandler.ts';
-import { BookingModel } from '../../models/bookingModel.ts';
+import { BookingModel, type Booking } from '../../models/bookingModel.ts';
 import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
 import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
-import { getRequestHandler, getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
+import { getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
+import type { RequestHandler } from 'express';
+import type { ResponsePayload } from '../../models/ApiModels.ts';
+import { ObjectId } from 'mongodb';
 
 const createBooking = createRequestHandler(BookingModel, 'Failed to create booking');
 
@@ -11,7 +14,20 @@ const updateBooking = updateRequestHandler(BookingModel, 'Booking not found');
 
 const deleteBooking = deleteRequestHandler(BookingModel, 'Booking not found');
 
-const getAllBookings = getRequestHandler(BookingModel);
+const getAllBookings: RequestHandler<
+  { tourId?: string },
+  ResponsePayload<Booking[]>,
+  null,
+  null
+> = async (req, res) => {
+  const { tourId } = req.params;
+  const bookings = await BookingModel.find(tourId ? { tour: new ObjectId(tourId) } : {});
+
+  res.status(200).json({
+    status: 'success',
+    data: bookings,
+  });
+};
 
 const getBooking = getRequestHandlerSingle(BookingModel, 'Booking not found', {
   populate: 'user tour',
