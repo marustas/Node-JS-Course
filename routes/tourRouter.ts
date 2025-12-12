@@ -3,6 +3,7 @@ import tourController from '../controllers/tours/tourController.ts';
 import { authController } from '../controllers/auth/authController.ts';
 import { UserRole } from '../models/userModel.ts';
 import { reviewRouter } from './reviewRouter.ts';
+import bookingRouter from './bookingRouter.ts';
 
 const tourRouter = Router();
 
@@ -18,7 +19,7 @@ tourRouter.use(authController.protect);
 
 tourRouter.use('/:tourId/reviews', reviewRouter);
 
-tourRouter.use('/:tourId/reviews', reviewRouter);
+tourRouter.use('/:tourId/bookings', bookingRouter);
 
 tourRouter
   .post('/', authController.restrictTo(UserRole.ADMIN), tourController.createTour)
