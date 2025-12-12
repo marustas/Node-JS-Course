@@ -21,7 +21,7 @@ const reviewSchema = new Schema(
     },
     createdAt: {
       type: Date,
-      default: Date.now,
+      default: Date.now(),
     },
     tour: { type: Schema.Types.ObjectId, ref: 'Tour', required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },

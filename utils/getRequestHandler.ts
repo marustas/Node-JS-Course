@@ -37,7 +37,7 @@ export const getRequestHandlerSingle = <
 
 export const getRequestHandler = <TModel>(
   model: Model<TModel>,
-  options: {
+  options?: {
     query: boolean;
   }
 ): RequestHandler<null, ResponsePayload<TModel[]>, null, QueryFeatures> =>
