@@ -1,15 +1,13 @@
 import type { RequestHandler } from 'express';
-
-import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
-
+import type { Tour } from '../models/tourModel.ts';
+import { getRequestHandler, getRequestHandlerSingle } from '../utils/getRequestHandler.ts';
+import TourModel from '../models/tourModel.ts';
+import { createRequestHandler } from '../utils/createRequestHandler.ts';
+import { updateRequestHandler } from '../utils/updateRequestHandler.ts';
+import { deleteRequestHandler } from '../utils/deleteRequestHandler.ts';
+import { AppError, type ResponsePayload } from '../models/ApiModels.ts';
 import type { FilterQuery, PipelineStage } from 'mongoose';
-import { catchAsync } from '../../utils/catchAsync.ts';
-import TourModel, { type Tour } from '../../models/tourModel.ts';
-
-import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
-import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
-import { createRequestHandler } from '../../utils/createRequestHandler.ts';
-import { getRequestHandler, getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
+import { catchAsync } from '../utils/catchAsync.ts';
 
 interface TourParams {
   id: string;
