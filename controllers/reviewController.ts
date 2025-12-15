@@ -1,8 +1,8 @@
 import type { RequestHandler } from 'express';
-import { ReviewModel, type Review } from '../../models/reviewModel.ts';
-import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
-import { catchAsync } from '../../utils/catchAsync.ts';
 import { ObjectId } from 'mongodb';
+import { AppError, type ResponsePayload } from '../models/ApiModels.ts';
+import { ReviewModel, type Review } from '../models/reviewModel.ts';
+import { catchAsync } from '../utils/catchAsync.ts';
 
 const getAllReviews: RequestHandler<
   { tourId: string },

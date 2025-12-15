@@ -1,12 +1,12 @@
-import { catchAsync } from '../../utils/catchAsync.ts';
-import { createRequestHandler } from '../../utils/createRequestHandler.ts';
-import { BookingModel, type Booking } from '../../models/bookingModel.ts';
-import { updateRequestHandler } from '../../utils/updateRequestHandler.ts';
-import { deleteRequestHandler } from '../../utils/deleteRequestHandler.ts';
-import { getRequestHandlerSingle } from '../../utils/getRequestHandler.ts';
 import type { RequestHandler } from 'express';
-import type { ResponsePayload } from '../../models/ApiModels.ts';
 import { ObjectId } from 'mongodb';
+import type { ResponsePayload } from '../models/ApiModels.ts';
+import { BookingModel, type Booking } from '../models/bookingModel.ts';
+import { catchAsync } from '../utils/catchAsync.ts';
+import { createRequestHandler } from '../utils/createRequestHandler.ts';
+import { deleteRequestHandler } from '../utils/deleteRequestHandler.ts';
+import { getRequestHandlerSingle } from '../utils/getRequestHandler.ts';
+import { updateRequestHandler } from '../utils/updateRequestHandler.ts';
 
 const createBooking = createRequestHandler(BookingModel, 'Failed to create booking');
 

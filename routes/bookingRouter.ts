@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { bookingController } from '../controllers/bookings/bookingController.ts';
-import { authController } from '../controllers/auth/authController.ts';
+
 import { UserRole } from '../models/userModel.ts';
+import { authController } from '../controllers/authController.ts';
+import { bookingController } from '../controllers/bookingController.ts';
 
 const bookingRouter = Router({ mergeParams: true });
 
