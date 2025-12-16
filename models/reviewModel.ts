@@ -1,8 +1,9 @@
-import { model, Query, Schema, Types, type InferSchemaType, type PipelineStage } from 'mongoose';
+import { model, Query, Schema, type InferSchemaType, type PipelineStage } from 'mongoose';
 import TourModel from './tourModel.ts';
+import type { Types } from 'mongoose';
 
 interface AverageRatingsResult {
-  _id: Types.ObjectId;
+  _id: Schema.Types.ObjectId;
   averageRating: number;
   ratingQuantity: number;
 }
