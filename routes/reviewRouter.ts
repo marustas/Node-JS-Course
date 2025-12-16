@@ -20,8 +20,7 @@ reviewRouter.use(authController.protect, authController.restrictTo(UserRole.USER
 
 reviewRouter.route('/').get(reviewController.getAllReviews).post(reviewController.createReview);
 
-reviewRouter.patch(
-  '/:id',
-  validateBody(updateReviewRequestBodySchema),
-  reviewController.updateReview
-);
+reviewRouter
+  .route('/:id')
+  .patch(validateBody(updateReviewRequestBodySchema), reviewController.updateReview)
+  .delete(reviewController.deleteReview);

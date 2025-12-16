@@ -51,6 +51,11 @@ const reviewSchema = new Schema(
         }
       },
     },
+    methods: {
+      isOwnReview: function (userId: Types.ObjectId) {
+        return this.user === userId;
+      },
+    },
   }
 );
 

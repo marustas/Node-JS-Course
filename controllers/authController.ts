@@ -46,13 +46,7 @@ const createSendToken = (
 const signUp: RequestHandler<null, AuthResponsePayload, User> = async (req, res) => {
   const newUser = await UserModel.create(req.body);
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    data: newUser,
-    token,
-  });
+  createSendToken(newUser, 201, res);
 };
 
 const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, next) => {
@@ -106,8 +100,6 @@ const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>,
     status: 'success',
     message: 'Token sent to email!',
   });
-
-  next();
 };
 
 const resetPassword: RequestHandler<

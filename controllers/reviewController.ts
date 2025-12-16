@@ -58,7 +58,7 @@ const updateReview: RequestHandler<
     return next(new AppError('Review not found', 404));
   }
 
-  if (reviewToUpdate.user !== req.user._id) {
+  if (reviewToUpdate.isOwnReview(req.user._id)) {
     return next(new AppError('You do not have permission to update this review', 403));
   }
 
@@ -77,8 +77,36 @@ const updateReview: RequestHandler<
   });
 };
 
+const deleteReview: RequestHandler<{ id: string }, ResponsePayload<null>, null, null> = async (
+  req,
+  res,
+  next
+) => {
+  const reviewToDelete = await ReviewModel.findById(req.params.id);
+
+  if (!reviewToDelete) {
+    return next(new AppError('Review not found', 404));
+  }
+
+  if (reviewToDelete.isOwnReview(req.user._id)) {
+    return next(new AppError('You do not have permission to delete this review', 403));
+  }
+
+  const deletedReview = await ReviewModel.findByIdAndDelete(req.params.id);
+
+  if (!deletedReview) {
+    return next(new AppError('Failed to delete review', 400));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+};
+
 export const reviewController = {
   createReview: catchAsync(createReview),
   getAllReviews: catchAsync(getAllReviews),
   updateReview: catchAsync(updateReview),
+  deleteReview: catchAsync(deleteReview),
 };
