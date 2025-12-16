@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import tourController from '../controllers/tours/tourController.ts';
-import { authController } from '../controllers/auth/authController.ts';
+
 import { UserRole } from '../models/userModel.ts';
 import { reviewRouter } from './reviewRouter.ts';
 import bookingRouter from './bookingRouter.ts';
+
+import { authController } from '../controllers/authController.ts';
+import tourController from '../controllers/tourController.ts';
 
 const tourRouter = Router();
 
