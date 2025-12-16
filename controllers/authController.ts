@@ -201,8 +201,12 @@ const updatePassword: RequestHandler<unknown, AuthResponsePayload, User> = async
 const updateMe: RequestHandler<
   unknown,
   ResponsePayload<User>,
-  Omit<User, 'password' | 'role'>
+  Partial<Omit<User, 'password' | 'role'>>
 > = async (req, res, next) => {
+  if ('password' in req.body || 'role' in req.body) {
+    return next(new AppError('This route is not for password or role updates', 400));
+  }
+
   const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
     new: true,
     runValidators: true,
