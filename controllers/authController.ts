@@ -1,17 +1,17 @@
 import type { RequestHandler } from 'express';
-import { AppError, type ResponsePayload } from '../../models/ApiModels.ts';
-import type { User, UserRole } from '../../models/userModel.ts';
 
-import UserModel from '../../models/userModel.ts';
-import { catchAsync } from '../../utils/catchAsync.ts';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
-import { env } from '../../envSchema.ts';
-import { type StringValue } from 'ms';
-import { sendEmail } from '../../utils/email.ts';
 import crypto from 'crypto';
 
 import type { Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
+
+import jwt, { type JwtPayload } from 'jsonwebtoken';
+import { type ResponsePayload, AppError } from '../models/ApiModels.ts';
+import UserModel, { UserRole, type User } from '../models/userModel.ts';
+import { catchAsync } from '../utils/catchAsync.ts';
+import { sendEmail } from '../utils/email.ts';
+import { type StringValue } from 'ms';
+import { env } from '../envSchema.ts';
 
 interface AuthResponsePayload extends ResponsePayload<User> {
   token: string;
@@ -201,8 +201,12 @@ const updatePassword: RequestHandler<unknown, AuthResponsePayload, User> = async
 const updateMe: RequestHandler<
   unknown,
   ResponsePayload<User>,
-  Omit<User, 'password' | 'role'>
+  Partial<Omit<User, 'password' | 'role'>>
 > = async (req, res, next) => {
+  if ('password' in req.body || 'role' in req.body) {
+    return next(new AppError('This route is not for password or role updates', 400));
+  }
+
   const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
     new: true,
     runValidators: true,
