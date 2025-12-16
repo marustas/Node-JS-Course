@@ -34,6 +34,7 @@ const createSendToken = (
     expires: new Date(Date.now() + (env.JWT_COOKIE_EXPIRES_IN as number) * 24 * 60 * 60 * 1000), // days to milliseconds
     httpOnly: true,
     secure: env.ENVIRONMENT === 'production',
+    sameSite: 'lax',
   });
 
   res.status(statusCode).json({
