@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AppError } from '../models/ApiModels.ts';
 
 export const validateBody =
-  <S extends z.ZodType>(schema: S): RequestHandler =>
+  <S extends z.ZodType>(schema: S): RequestHandler<unknown, unknown, z.infer<S>, unknown> =>
   (req, _res, next) => {
     const parsed = schema.safeParse(req.body);
 
