@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import { model, Schema, type InferSchemaType } from 'mongoose';
 
 const tourSchema = new Schema({
@@ -92,7 +91,7 @@ const tourSchema = new Schema({
     },
   ],
 
-  guides: [{ type: ObjectId, ref: 'User' }],
+  guides: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 });
 
 tourSchema.index({ startLocation: '2dsphere' });

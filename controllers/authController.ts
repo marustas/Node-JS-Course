@@ -34,6 +34,7 @@ const createSendToken = (
     expires: new Date(Date.now() + (env.JWT_COOKIE_EXPIRES_IN as number) * 24 * 60 * 60 * 1000), // days to milliseconds
     httpOnly: true,
     secure: env.ENVIRONMENT === 'production',
+    sameSite: 'lax',
   });
 
   res.status(statusCode).json({
@@ -46,13 +47,7 @@ const createSendToken = (
 const signUp: RequestHandler<null, AuthResponsePayload, User> = async (req, res) => {
   const newUser = await UserModel.create(req.body);
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    data: newUser,
-    token,
-  });
+  createSendToken(newUser, 201, res);
 };
 
 const login: RequestHandler<null, AuthResponsePayload, User> = async (req, res, next) => {
@@ -106,8 +101,6 @@ const forgotPassword: RequestHandler<null, ResponsePayload<{ message: string }>,
     status: 'success',
     message: 'Token sent to email!',
   });
-
-  next();
 };
 
 const resetPassword: RequestHandler<

@@ -1,19 +1,20 @@
-import { model, Schema, Types, type InferSchemaType } from 'mongoose';
+import { model, Schema, type InferSchemaType } from 'mongoose';
 
 const bookingSchema = new Schema({
   tour: {
-    type: Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Tour',
     required: [true, 'Booking must belong to a Tour'],
   },
   user: {
-    type: Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Booking must belong to a User'],
   },
   price: {
     type: Number,
     required: [true, 'Booking must have a price'],
+    min: 0,
   },
   createdAt: {
     type: Date,

@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { xssSanitizer } from './utils/sanitizer.ts';
 import { sanitizeMongo } from './utils/sanitizeMongo.ts';
 import { reviewRouter } from './routes/reviewRouter.ts';
+import { env } from './envSchema.ts';
 
 const app = express();
 
@@ -18,6 +19,16 @@ const limiter = rateLimit({
 });
 
 app.use(helmet());
+
+if (env.ENVIRONMENT === 'production') {
+  app.use(
+    helmet.hsts({
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    })
+  );
+}
 
 app.use('/api', limiter);
 
